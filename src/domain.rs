@@ -20,4 +20,5 @@ pub struct Config {
     pub title: String,
     pub base_url: String,
     pub description: Option<String>,
+    pub posts_per_page: Option<usize>,
 }

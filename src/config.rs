@@ -17,19 +17,22 @@ mod tests {
 
     #[test]
     fn test_load_config() {
-        let toml_content = r#"
-            title = "My Test Blog"
-            base_url = "https://example.com"
-            description = "A test blog"
-        "#;
-
-        let mut file = NamedTempFile::new().expect("Failed to create temp file");
-        write!(file, "{}", toml_content).expect("Failed to write to temp file");
+                let toml_content = r#"
+                    title = "My Test Blog"
+                    base_url = "https://example.com"
+                    description = "A test blog"
+                    posts_per_page = 10
+                "#;
         
-        let config = load_config(file.path()).expect("Failed to load config");
-
-        assert_eq!(config.title, "My Test Blog");
-        assert_eq!(config.base_url, "https://example.com");
-        assert_eq!(config.description, Some("A test blog".to_string()));
-    }
-}
+                let mut file = NamedTempFile::new().expect("Failed to create temp file");
+                write!(file, "{}", toml_content).expect("Failed to write to temp file");
+                
+                let config = load_config(file.path()).expect("Failed to load config");
+        
+                assert_eq!(config.title, "My Test Blog");
+                assert_eq!(config.base_url, "https://example.com");
+                assert_eq!(config.description, Some("A test blog".to_string()));
+                assert_eq!(config.posts_per_page, Some(10));
+            }
+        }
+        

@@ -58,6 +58,7 @@ mod tests {
             title: "Test Blog".to_string(),
             base_url: "https://example.com".to_string(),
             description: None,
+            posts_per_page: None,
         };
 
         let posts = vec![
@@ -85,6 +86,7 @@ mod tests {
             title: "Test Blog".to_string(),
             base_url: "https://example.com".to_string(),
             description: Some("A test blog".to_string()),
+            posts_per_page: None,
         };
 
         let posts = vec![

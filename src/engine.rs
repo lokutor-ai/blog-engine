@@ -170,6 +170,7 @@ mod tests {
             title = "Test Blog"
             base_url = "https://example.com"
             description = "A test blog"
+            posts_per_page = 10
         "#;
         fs::write(project_dir.join("config.toml"), config_content).unwrap();
 

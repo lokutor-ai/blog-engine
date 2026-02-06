@@ -70,6 +70,7 @@ mod tests {
             title: "My Blog".to_string(),
             base_url: "https://example.com".to_string(),
             description: None,
+            posts_per_page: None,
         };
 
         let output = renderer.render_taxonomy("rust", &[&post], &config).expect("Failed to render taxonomy");
@@ -113,6 +114,7 @@ mod tests {
             title: "My Blog".to_string(),
             base_url: "https://example.com".to_string(),
             description: None,
+            posts_per_page: None,
         };
 
         let output = renderer.render_post(&post, &config).expect("Failed to render post");
