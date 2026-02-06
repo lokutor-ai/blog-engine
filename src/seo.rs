@@ -66,6 +66,8 @@ mod tests {
                     title: "Post 1".to_string(),
                     date: "2023-01-01".to_string(),
                     slug: "post-1".to_string(),
+                    tags: None,
+                    categories: None,
                 },
                 content: "content".to_string(),
             },
@@ -73,66 +75,36 @@ mod tests {
 
         let sitemap = generate_sitemap(&posts, &config).expect("Failed to generate sitemap");
 
-                assert!(sitemap.contains("<loc>https://example.com/</loc>"));
+        assert!(sitemap.contains("<loc>https://example.com/</loc>"));
+        assert!(sitemap.contains("<loc>https://example.com/posts/post-1/</loc>"));
+    }
 
-                assert!(sitemap.contains("<loc>https://example.com/posts/post-1/</loc>"));
+    #[test]
+    fn test_generate_rss() {
+        let config = Config {
+            title: "Test Blog".to_string(),
+            base_url: "https://example.com".to_string(),
+            description: Some("A test blog".to_string()),
+        };
 
-            }
+        let posts = vec![
+            Post {
+                meta: PostMeta {
+                    title: "Post 1".to_string(),
+                    date: "2023-01-01".to_string(),
+                    slug: "post-1".to_string(),
+                    tags: None,
+                    categories: None,
+                },
+                content: "content".to_string(),
+            },
+        ];
 
-        
+        let rss = generate_rss(&posts, &config).expect("Failed to generate RSS");
 
-            #[test]
-
-            fn test_generate_rss() {
-
-                let config = Config {
-
-                    title: "Test Blog".to_string(),
-
-                    base_url: "https://example.com".to_string(),
-
-                    description: Some("A test blog".to_string()),
-
-                };
-
-        
-
-                let posts = vec![
-
-                    Post {
-
-                        meta: PostMeta {
-
-                            title: "Post 1".to_string(),
-
-                            date: "2023-01-01".to_string(),
-
-                            slug: "post-1".to_string(),
-
-                        },
-
-                        content: "content".to_string(),
-
-                    },
-
-                ];
-
-        
-
-                let rss = generate_rss(&posts, &config).expect("Failed to generate RSS");
-
-        
-
-                assert!(rss.contains("<title>Test Blog</title>"));
-
-                assert!(rss.contains("<link>https://example.com</link>"));
-
-                assert!(rss.contains("<title>Post 1</title>"));
-
-                assert!(rss.contains("https://example.com/posts/post-1/"));
-
-            }
-
-        }
-
-        
+        assert!(rss.contains("<title>Test Blog</title>"));
+        assert!(rss.contains("<link>https://example.com</link>"));
+        assert!(rss.contains("<title>Post 1</title>"));
+        assert!(rss.contains("https://example.com/posts/post-1/"));
+    }
+}

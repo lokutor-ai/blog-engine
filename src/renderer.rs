@@ -61,6 +61,8 @@ mod tests {
                 title: "Hello World".to_string(),
                 date: "2023-01-01".to_string(),
                 slug: "hello-world".to_string(),
+                tags: None,
+                categories: None,
             },
             content: "<p>This is content</p>".to_string(),
         };

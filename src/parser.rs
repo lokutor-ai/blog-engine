@@ -45,6 +45,8 @@ This is a test post.
             title: "Hello World".to_string(),
             date: "2023-10-27".to_string(),
             slug: "hello-world".to_string(),
+            tags: None,
+            categories: None,
         };
 
         let result = parse_markdown(raw_content).expect("Failed to parse markdown");
