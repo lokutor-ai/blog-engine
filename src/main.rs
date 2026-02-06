@@ -1,8 +1,8 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
-use web_blog::engine::build_site;
-use web_blog::server::serve;
+use blog_engine::engine::build_site;
+use blog_engine::server::serve;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -59,7 +59,7 @@ async fn main() -> Result<()> {
             serve(input, output, *port, *drafts).await?;
         }
         Commands::New { path } => {
-            web_blog::engine::init_project(path)?;
+            blog_engine::engine::init_project(path)?;
         }
     }
 

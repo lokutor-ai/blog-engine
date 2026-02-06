@@ -1,4 +1,4 @@
-# web-blog
+# blog-engine
 
 A high-performance, SEO-focused static site generator for bloggers, written in Rust. It transforms Markdown files into a complete, deployment-ready website with support for taxonomies, pagination, and live reloading.
 
@@ -20,25 +20,25 @@ Ensure you have the Rust toolchain installed. Clone the repository and build the
 cargo build --release
 ```
 
-The binary will be available at `./target/release/web-blog`.
+The binary will be available at `./target/release/blog-engine`.
 
 ## Quick Start
 
 1. **Initialize a new project**:
    ```bash
-   web-blog new my-awesome-blog
+   blog-engine new my-awesome-blog
    cd my-awesome-blog
    ```
 
 2. **Start the development server**:
    ```bash
-   web-blog serve --drafts
+   blog-engine serve --drafts
    ```
    Open `http://localhost:3000` in your browser.
 
 3. **Build for production**:
    ```bash
-   web-blog build --output ./dist
+   blog-engine build --output ./dist
    ```
 
 ## Project Structure
@@ -95,4 +95,4 @@ draft: false
 
 ## License
 
-MIT / Apache-2.0
+MIT

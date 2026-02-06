@@ -186,6 +186,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "blog-engine"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "clap",
+ "gray_matter",
+ "notify-debouncer-mini",
+ "pulldown-cmark",
+ "rayon",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+ "tempfile",
+ "tera",
+ "thiserror",
+ "tokio",
+ "toml 0.9.11+spec-1.1.0",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "walkdir",
+]
+
+[[package]]
 name = "bstr"
 version = "1.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1809,31 +1834,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f01b580c9ac74c8d8f0c0e4afb04eeef2acf145458e52c03845ee9cd23e3d12"
 dependencies = [
  "unicode-ident",
-]
-
-[[package]]
-name = "web-blog"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "axum",
- "clap",
- "gray_matter",
- "notify-debouncer-mini",
- "pulldown-cmark",
- "rayon",
- "serde",
- "serde_json",
- "serde_yaml",
- "tempfile",
- "tera",
- "thiserror",
- "tokio",
- "toml 0.9.11+spec-1.1.0",
- "tower-http",
- "tracing",
- "tracing-subscriber",
- "walkdir",
 ]
 
 [[package]]
