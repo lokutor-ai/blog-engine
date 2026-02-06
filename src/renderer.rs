@@ -27,6 +27,14 @@ impl Renderer {
         context.insert("config", config);
         Ok(self.tera.render("index.html", &context)?)
     }
+
+    pub fn render_taxonomy(&self, name: &str, posts: &[&Post], config: &Config) -> Result<String> {
+        let mut context = Context::new();
+        context.insert("name", name);
+        context.insert("posts", posts);
+        context.insert("config", config);
+        Ok(self.tera.render("taxonomy.html", &context)?)
+    }
 }
 
 #[cfg(test)]
@@ -35,6 +43,40 @@ mod tests {
     use crate::domain::PostMeta;
     use std::fs;
     use tempfile::TempDir;
+
+    #[test]
+    fn test_render_taxonomy() {
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+        let theme_dir = temp_dir.path().join("templates");
+        fs::create_dir(&theme_dir).expect("Failed to create templates dir");
+
+        let taxonomy_template = "<h1>Tag: {{ name }}</h1><ul>{% for post in posts %}<li>{{ post.meta.title }}</li>{% endfor %}</ul>";
+        fs::write(theme_dir.join("taxonomy.html"), taxonomy_template).expect("Failed to write template");
+
+        let renderer = Renderer::new(&theme_dir).expect("Failed to create renderer");
+
+        let post = Post {
+            meta: PostMeta {
+                title: "Hello World".to_string(),
+                date: "2023-01-01".to_string(),
+                slug: "hello-world".to_string(),
+                tags: None,
+                categories: None,
+            },
+            content: "content".to_string(),
+        };
+
+        let config = Config {
+            title: "My Blog".to_string(),
+            base_url: "https://example.com".to_string(),
+            description: None,
+        };
+
+        let output = renderer.render_taxonomy("rust", &[&post], &config).expect("Failed to render taxonomy");
+
+        assert!(output.contains("<h1>Tag: rust</h1>"));
+        assert!(output.contains("Hello World"));
+    }
 
     #[test]
     fn test_render_post() {

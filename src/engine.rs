@@ -28,6 +28,22 @@ pub fn build_site<P: AsRef<Path>>(
     let index_html = renderer.render_index(&posts, &config)?;
     fs::write(output_dir.join("index.html"), index_html)?;
 
+    let tags = crate::taxonomy::group_by_tag(&posts);
+    for (tag, tag_posts) in tags {
+        let tag_html = renderer.render_taxonomy(&tag, &tag_posts, &config)?;
+        let tag_dir = output_dir.join("tags").join(tag);
+        fs::create_dir_all(&tag_dir)?;
+        fs::write(tag_dir.join("index.html"), tag_html)?;
+    }
+
+    let categories = crate::taxonomy::group_by_category(&posts);
+    for (category, category_posts) in categories {
+        let category_html = renderer.render_taxonomy(&category, &category_posts, &config)?;
+        let category_dir = output_dir.join("categories").join(category);
+        fs::create_dir_all(&category_dir)?;
+        fs::write(category_dir.join("index.html"), category_html)?;
+    }
+
     let sitemap_xml = crate::seo::generate_sitemap(&posts, &config)?;
     fs::write(output_dir.join("sitemap.xml"), sitemap_xml)?;
 
@@ -101,6 +117,21 @@ Welcome to your new blog!
 </html>"#;
     fs::write(path.join("themes/default/post.html"), post_html)?;
 
+    let taxonomy_html = r#"<!DOCTYPE html>
+<html>
+<head><title>{{ name }} - {{ config.title }}</title></head>
+<body>
+    <nav><a href="/">Back to Home</a></nav>
+    <h1>Posts tagged/categorized as "{{ name }}"</h1>
+    <ul>
+    {% for post in posts %}
+        <li><a href="/posts/{{ post.meta.slug }}/">{{ post.meta.title }}</a> - {{ post.meta.date }}</li>
+    {% endfor %}
+    </ul>
+</body>
+</html>"#;
+    fs::write(path.join("themes/default/taxonomy.html"), taxonomy_html)?;
+
     println!("Project initialized at {:?}", path);
     Ok(())
 }
@@ -146,6 +177,8 @@ mod tests {
 title: My Post
 date: 2023-01-01
 slug: my-post
+tags: ["rust"]
+categories: ["programming"]
 ---
 # Hello
 "#;
@@ -157,6 +190,9 @@ slug: my-post
         let post_template = "<h1>{{ post.meta.title }}</h1><div>{{ post.content }}</div>";
         fs::write(project_dir.join("themes/default/post.html"), post_template).unwrap();
 
+        let taxonomy_template = "<h1>Taxonomy: {{ name }}</h1><ul>{% for post in posts %}<li>{{ post.meta.title }}</li>{% endfor %}</ul>";
+        fs::write(project_dir.join("themes/default/taxonomy.html"), taxonomy_template).unwrap();
+
         fs::create_dir_all(project_dir.join("static/css")).unwrap();
         fs::write(project_dir.join("static/css/style.css"), "body { color: red; }").unwrap();
 
@@ -164,6 +200,8 @@ slug: my-post
 
         assert!(output_dir.join("index.html").exists());
         assert!(output_dir.join("posts/my-post/index.html").exists()); 
+        assert!(output_dir.join("tags/rust/index.html").exists());
+        assert!(output_dir.join("categories/programming/index.html").exists());
         assert!(output_dir.join("css/style.css").exists());
         assert!(output_dir.join("sitemap.xml").exists());
         assert!(output_dir.join("rss.xml").exists());
