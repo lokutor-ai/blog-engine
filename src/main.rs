@@ -19,6 +19,9 @@ enum Commands {
 
         #[arg(short, long, default_value = "public")]
         output: PathBuf,
+
+        #[arg(short, long)]
+        drafts: bool,
     },
     Serve {
         #[arg(short, long, default_value = ".")]
@@ -29,6 +32,9 @@ enum Commands {
 
         #[arg(short, long, default_value_t = 3000)]
         port: u16,
+
+        #[arg(short, long)]
+        drafts: bool,
     },
     New {
         path: PathBuf,
@@ -40,15 +46,16 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match &cli.command {
-        Commands::Build { input, output } => {
-            build_site(input, output)?;
+        Commands::Build { input, output, drafts } => {
+            build_site(input, output, *drafts)?;
         }
         Commands::Serve {
             input,
             output,
             port,
+            drafts,
         } => {
-            serve(input, output, *port).await?;
+            serve(input, output, *port, *drafts).await?;
         }
         Commands::New { path } => {
             web_blog::engine::init_project(path)?;

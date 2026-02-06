@@ -7,11 +7,11 @@ use std::sync::mpsc::channel;
 use std::time::Duration;
 use tower_http::services::ServeDir;
 
-pub async fn serve<P: AsRef<Path>>(input: P, output: P, port: u16) -> Result<()> {
+pub async fn serve<P: AsRef<Path>>(input: P, output: P, port: u16, include_drafts: bool) -> Result<()> {
     let input = input.as_ref().to_path_buf();
     let output = output.as_ref().to_path_buf();
 
-    build_site(&input, &output)?;
+    build_site(&input, &output, include_drafts)?;
 
     let (tx, rx) = channel();
     let mut debouncer = new_debouncer(Duration::from_millis(500), tx)?;
@@ -25,7 +25,7 @@ pub async fn serve<P: AsRef<Path>>(input: P, output: P, port: u16) -> Result<()>
         while let Ok(res) = rx.recv() {
             match res {
                 Ok(_) => {
-                    if let Err(e) = build_site(&input_cloned, &output_cloned) {
+                    if let Err(e) = build_site(&input_cloned, &output_cloned, include_drafts) {
                         eprintln!("Rebuild failed: {}", e);
                     } else {
                         println!("Site rebuilt successfully.");
