@@ -50,6 +50,59 @@ pub fn build_site<P: AsRef<Path>>(
     Ok(())
 }
 
+pub fn init_project<P: AsRef<Path>>(path: P) -> Result<()> {
+    let path = path.as_ref();
+    fs::create_dir_all(path.join("content/posts"))?;
+    fs::create_dir_all(path.join("themes/default"))?;
+    fs::create_dir_all(path.join("static"))?;
+
+    let config_toml = r#"title = "My New Blog"
+base_url = "http://localhost:3000"
+description = "A blog generated with Rust"
+"#;
+    fs::write(path.join("config.toml"), config_toml)?;
+
+    let hello_world = r#"---
+title: Hello World
+date: 2026-02-06
+slug: hello-world
+---
+# Hello World
+
+Welcome to your new blog!
+"#;
+    fs::write(path.join("content/posts/hello-world.md"), hello_world)?;
+
+    let index_html = r#"<!DOCTYPE html>
+<html>
+<head><title>{{ config.title }}</title></head>
+<body>
+    <h1>{{ config.title }}</h1>
+    <ul>
+    {% for post in posts %}
+        <li><a href="/posts/{{ post.meta.slug }}/">{{ post.meta.title }}</a> - {{ post.meta.date }}</li>
+    {% endfor %}
+    </ul>
+</body>
+</html>"#;
+    fs::write(path.join("themes/default/index.html"), index_html)?;
+
+    let post_html = r#"<!DOCTYPE html>
+<html>
+<head><title>{{ post.meta.title }} - {{ config.title }}</title></head>
+<body>
+    <nav><a href="/">Back to Home</a></nav>
+    <h1>{{ post.meta.title }}</h1>
+    <p>Published on: {{ post.meta.date }}</p>
+    <div>{{ post.content }}</div>
+</body>
+</html>"#;
+    fs::write(path.join("themes/default/post.html"), post_html)?;
+
+    println!("Project initialized at {:?}", path);
+    Ok(())
+}
+
 fn copy_recursive(src: &Path, dst: &Path) -> Result<()> {
     for entry in WalkDir::new(src).into_iter().filter_map(|e| e.ok()) {
         let path = entry.path();

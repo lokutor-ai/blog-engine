@@ -30,6 +30,9 @@ enum Commands {
         #[arg(short, long, default_value_t = 3000)]
         port: u16,
     },
+    New {
+        path: PathBuf,
+    },
 }
 
 #[tokio::main]
@@ -46,6 +49,9 @@ async fn main() -> Result<()> {
             port,
         } => {
             serve(input, output, *port).await?;
+        }
+        Commands::New { path } => {
+            web_blog::engine::init_project(path)?;
         }
     }
 
