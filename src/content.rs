@@ -1,26 +1,30 @@
 use crate::domain::Post;
 use crate::parser::parse_markdown;
 use anyhow::{Context, Result};
+use rayon::prelude::*;
 use std::fs;
 use std::path::Path;
 use walkdir::WalkDir;
 
 pub fn load_posts<P: AsRef<Path>>(dir_path: P) -> Result<Vec<Post>> {
-    let mut posts = Vec::new();
+    let entries: Vec<_> = WalkDir::new(dir_path)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_type().is_file() && e.path().extension().map_or(false, |ext| ext == "md"))
+        .collect();
 
-    for entry in WalkDir::new(dir_path).into_iter().filter_map(|e| e.ok()) {
-        if entry.file_type().is_file() && entry.path().extension().map_or(false, |ext| ext == "md") {
+    entries
+        .into_par_iter()
+        .map(|entry| {
             let content = fs::read_to_string(entry.path())
                 .with_context(|| format!("Failed to read file: {:?}", entry.path()))?;
             
             let post = parse_markdown(&content)
                 .with_context(|| format!("Failed to parse file: {:?}", entry.path()))?;
             
-            posts.push(post);
-        }
-    }
-
-    Ok(posts)
+            Ok(post)
+        })
+        .collect()
 }
 
 #[cfg(test)]

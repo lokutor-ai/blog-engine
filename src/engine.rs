@@ -39,13 +39,15 @@ pub fn build_site<P: AsRef<Path>>(
         copy_recursive(&static_dir, output_dir)?;
     }
 
-    for post in &posts {
+    use rayon::prelude::*;
+    posts.par_iter().try_for_each(|post| -> Result<()> {
         let post_html = renderer.render_post(post, &config)?;
         let post_slug = &post.meta.slug;
         let post_dir = output_dir.join("posts").join(post_slug);
         fs::create_dir_all(&post_dir)?;
         fs::write(post_dir.join("index.html"), post_html)?;
-    }
+        Ok(())
+    })?;
 
     Ok(())
 }
