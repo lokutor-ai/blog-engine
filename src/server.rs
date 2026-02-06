@@ -26,19 +26,19 @@ pub async fn serve<P: AsRef<Path>>(input: P, output: P, port: u16, include_draft
             match res {
                 Ok(_) => {
                     if let Err(e) = build_site(&input_cloned, &output_cloned, include_drafts) {
-                        eprintln!("Rebuild failed: {}", e);
+                        tracing::error!("Rebuild failed: {}", e);
                     } else {
-                        println!("Site rebuilt successfully.");
+                        tracing::info!("Site rebuilt successfully.");
                     }
                 }
-                Err(e) => eprintln!("Watch error: {:?}", e),
+                Err(e) => tracing::error!("Watch error: {:?}", e),
             }
         }
     });
 
     let app = Router::new().fallback_service(ServeDir::new(&output));
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port)).await?;
-    println!("Serving blog at http://localhost:{}", port);
+    tracing::info!("Serving blog at http://localhost:{}", port);
     axum::serve(listener, app).await?;
 
     Ok(())

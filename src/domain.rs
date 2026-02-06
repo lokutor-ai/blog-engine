@@ -7,6 +7,8 @@ pub struct PostMeta {
     pub slug: String,
     pub tags: Option<Vec<String>>,
     pub categories: Option<Vec<String>>,
+    pub draft: Option<bool>,
+    pub image: Option<String>,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]

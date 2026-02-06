@@ -72,6 +72,8 @@ mod tests {
                     slug: "p1".to_string(),
                     tags: None,
                     categories: None,
+                    draft: None,
+                    image: None,
                 },
                 content: "".to_string(),
             }],
@@ -101,11 +103,13 @@ mod tests {
 
         let post = Post {
             meta: PostMeta {
-                title: "Hello World".to_string(),
-                date: "2023-01-01".to_string(),
-                slug: "hello-world".to_string(),
+                title: "P1".to_string(),
+                date: "2023".to_string(),
+                slug: "p1".to_string(),
                 tags: None,
                 categories: None,
+                draft: None,
+                image: None,
             },
             content: "content".to_string(),
         };
@@ -120,7 +124,7 @@ mod tests {
         let output = renderer.render_taxonomy("rust", &[&post], &config).expect("Failed to render taxonomy");
 
         assert!(output.contains("<h1>Tag: rust</h1>"));
-        assert!(output.contains("Hello World"));
+        assert!(output.contains("P1"));
     }
 
     #[test]
@@ -129,7 +133,7 @@ mod tests {
         let theme_dir = temp_dir.path().join("templates");
         fs::create_dir(&theme_dir).expect("Failed to create templates dir");
 
-        let post_template = r#"\
+        let post_template = r###"#
         <!DOCTYPE html>
         <html>
         <head><title>{{ post.meta.title }} - {{ config.title }}</title></head>
@@ -138,7 +142,7 @@ mod tests {
             <div class="content">{{ post.content }}</div>
         </body>
         </html>
-        "#;
+        "###;
         fs::write(theme_dir.join("post.html"), post_template).expect("Failed to write template");
 
         let renderer = Renderer::new(&theme_dir).expect("Failed to create renderer");
@@ -150,6 +154,8 @@ mod tests {
                 slug: "hello-world".to_string(),
                 tags: None,
                 categories: None,
+                draft: None,
+                image: None,
             },
             content: "<p>This is content</p>".to_string(),
         };

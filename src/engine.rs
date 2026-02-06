@@ -9,16 +9,23 @@ use walkdir::WalkDir;
 pub fn build_site<P: AsRef<Path>>(
     project_dir: P,
     output_dir: P,
+    include_drafts: bool,
 ) -> Result<()> {
     let project_dir = project_dir.as_ref();
     let output_dir = output_dir.as_ref();
+
+    tracing::info!("Building site from {:?} to {:?}", project_dir, output_dir);
 
     let config = load_config(project_dir.join("config.toml"))?;
     
     let theme_dir = project_dir.join("themes").join("default"); 
     let renderer = Renderer::new(theme_dir)?;
 
-    let posts = load_posts(project_dir.join("content"))?;
+    let mut posts = load_posts(project_dir.join("content"))?;
+
+    if !include_drafts {
+        posts.retain(|p| !p.meta.draft.unwrap_or(false));
+    }
 
     if output_dir.exists() {
         fs::remove_dir_all(output_dir)?;
@@ -79,6 +86,7 @@ pub fn build_site<P: AsRef<Path>>(
         Ok(())
     })?;
 
+    tracing::info!("Build completed successfully.");
     Ok(())
 }
 
@@ -151,7 +159,7 @@ Welcome to your new blog!
 </html>"#;
     fs::write(path.join("themes/default/taxonomy.html"), taxonomy_html)?;
 
-    println!("Project initialized at {:?}", path);
+    tracing::info!("Project initialized at {:?}", path);
     Ok(())
 }
 
@@ -222,7 +230,7 @@ slug: post-2
         fs::create_dir_all(project_dir.join("static/css")).unwrap();
         fs::write(project_dir.join("static/css/style.css"), "body { color: red; }").unwrap();
 
-        build_site(&project_dir, &output_dir).expect("Failed to build site");
+        build_site(&project_dir, &output_dir, false).expect("Failed to build site");
 
         assert!(output_dir.join("sitemap.xml").exists());
         assert!(output_dir.join("rss.xml").exists());

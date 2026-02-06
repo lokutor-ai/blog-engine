@@ -47,6 +47,8 @@ This is a test post.
             slug: "hello-world".to_string(),
             tags: None,
             categories: None,
+            draft: None,
+            image: None,
         };
 
         let result = parse_markdown(raw_content).expect("Failed to parse markdown");
