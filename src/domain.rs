@@ -1,0 +1,21 @@
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct PostMeta {
+    pub title: String,
+    pub date: String,
+    pub slug: String,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct Post {
+    pub meta: PostMeta,
+    pub content: String,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct Config {
+    pub title: String,
+    pub base_url: String,
+    pub description: Option<String>,
+}
