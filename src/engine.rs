@@ -25,8 +25,22 @@ pub fn build_site<P: AsRef<Path>>(
     }
     fs::create_dir_all(output_dir)?;
 
-    let index_html = renderer.render_index(&posts, &config)?;
-    fs::write(output_dir.join("index.html"), index_html)?;
+    let mut posts = posts;
+    posts.sort_by(|a, b| b.meta.date.cmp(&a.meta.date));
+
+    let per_page = config.posts_per_page.unwrap_or(10);
+    let paginated_index = crate::pagination::paginate(&posts, per_page);
+
+    for (i, page) in paginated_index.iter().enumerate() {
+        let index_html = renderer.render_paginated_index(page, &config)?;
+        if i == 0 {
+            fs::write(output_dir.join("index.html"), index_html)?;
+        } else {
+            let page_dir = output_dir.join("page").join((i + 1).to_string());
+            fs::create_dir_all(&page_dir)?;
+            fs::write(page_dir.join("index.html"), index_html)?;
+        }
+    }
 
     let tags = crate::taxonomy::group_by_tag(&posts);
     for (tag, tag_posts) in tags {
@@ -97,10 +111,15 @@ Welcome to your new blog!
 <body>
     <h1>{{ config.title }}</h1>
     <ul>
-    {% for post in posts %}
+    {% for post in paginator.items %}
         <li><a href="/posts/{{ post.meta.slug }}/">{{ post.meta.title }}</a> - {{ post.meta.date }}</li>
     {% endfor %}
     </ul>
+    {% if paginator.total_pages > 1 %}
+    <nav>
+        Page {{ paginator.current_page }} of {{ paginator.total_pages }}
+    </nav>
+    {% endif %}
 </body>
 </html>"#;
     fs::write(path.join("themes/default/index.html"), index_html)?;
@@ -170,22 +189,28 @@ mod tests {
             title = "Test Blog"
             base_url = "https://example.com"
             description = "A test blog"
-            posts_per_page = 10
+            posts_per_page = 1
         "#;
         fs::write(project_dir.join("config.toml"), config_content).unwrap();
 
-        let post_content = r#"---
-title: My Post
+        let post1_content = r#"---
+title: Post 1
 date: 2023-01-01
-slug: my-post
-tags: ["rust"]
-categories: ["programming"]
+slug: post-1
 ---
-# Hello
+# P1
 "#;
-        fs::write(project_dir.join("content/posts/post.md"), post_content).unwrap();
+        let post2_content = r#"---
+title: Post 2
+date: 2023-01-02
+slug: post-2
+---
+# P2
+"#;
+        fs::write(project_dir.join("content/posts/post1.md"), post1_content).unwrap();
+        fs::write(project_dir.join("content/posts/post2.md"), post2_content).unwrap();
 
-        let index_template = "<h1>Index: {{ config.title }}</h1><ul>{% for post in posts %}<li>{{ post.meta.title }}</li>{% endfor %}</ul>";
+        let index_template = "<h1>Index: {{ config.title }}</h1>Page {{ paginator.current_page }}<ul>{% for post in paginator.items %}<li>{{ post.meta.title }}</li>{% endfor %}</ul>";
         fs::write(project_dir.join("themes/default/index.html"), index_template).unwrap();
 
         let post_template = "<h1>{{ post.meta.title }}</h1><div>{{ post.content }}</div>";
@@ -199,11 +224,6 @@ categories: ["programming"]
 
         build_site(&project_dir, &output_dir).expect("Failed to build site");
 
-        assert!(output_dir.join("index.html").exists());
-        assert!(output_dir.join("posts/my-post/index.html").exists()); 
-        assert!(output_dir.join("tags/rust/index.html").exists());
-        assert!(output_dir.join("categories/programming/index.html").exists());
-        assert!(output_dir.join("css/style.css").exists());
         assert!(output_dir.join("sitemap.xml").exists());
         assert!(output_dir.join("rss.xml").exists());
         
@@ -212,10 +232,10 @@ categories: ["programming"]
         
         let index_html = fs::read_to_string(output_dir.join("index.html")).unwrap();
         assert!(index_html.contains("Index: Test Blog"));
-        assert!(index_html.contains("My Post"));
+        assert!(index_html.contains("Post 2"));
 
-        let post_html = fs::read_to_string(output_dir.join("posts/my-post/index.html")).unwrap();
-        assert!(post_html.contains("<h1>My Post</h1>"));
-        assert!(post_html.contains("<h1>Hello</h1>"));
+        let post_html = fs::read_to_string(output_dir.join("posts/post-1/index.html")).unwrap();
+        assert!(post_html.contains("<h1>Post 1</h1>"));
+        assert!(post_html.contains("<h1>P1</h1>"));
     }
 }

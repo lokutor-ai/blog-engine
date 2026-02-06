@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct PostMeta {
     pub title: String,
     pub date: String,
@@ -9,7 +9,7 @@ pub struct PostMeta {
     pub categories: Option<Vec<String>>,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct Post {
     pub meta: PostMeta,
     pub content: String,

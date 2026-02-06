@@ -28,6 +28,13 @@ impl Renderer {
         Ok(self.tera.render("index.html", &context)?)
     }
 
+    pub fn render_paginated_index(&self, paginator: &crate::pagination::Paginator<Post>, config: &Config) -> Result<String> {
+        let mut context = Context::new();
+        context.insert("paginator", paginator);
+        context.insert("config", config);
+        Ok(self.tera.render("index.html", &context)?)
+    }
+
     pub fn render_taxonomy(&self, name: &str, posts: &[&Post], config: &Config) -> Result<String> {
         let mut context = Context::new();
         context.insert("name", name);
@@ -43,6 +50,43 @@ mod tests {
     use crate::domain::PostMeta;
     use std::fs;
     use tempfile::TempDir;
+
+    #[test]
+    fn test_render_paginated_index() {
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+        let theme_dir = temp_dir.path().join("templates");
+        fs::create_dir(&theme_dir).expect("Failed to create templates dir");
+
+        let index_template = "Page {{ paginator.current_page }} of {{ paginator.total_pages }}: {% for post in paginator.items %}{{ post.meta.title }}{% endfor %}";
+        fs::write(theme_dir.join("index.html"), index_template).expect("Failed to write template");
+
+        let renderer = Renderer::new(&theme_dir).expect("Failed to create renderer");
+
+        let paginator = crate::pagination::Paginator {
+            current_page: 1,
+            total_pages: 2,
+            items: vec![Post {
+                meta: PostMeta {
+                    title: "P1".to_string(),
+                    date: "2023".to_string(),
+                    slug: "p1".to_string(),
+                    tags: None,
+                    categories: None,
+                },
+                content: "".to_string(),
+            }],
+        };
+
+        let config = Config {
+            title: "Blog".to_string(),
+            base_url: "url".to_string(),
+            description: None,
+            posts_per_page: None,
+        };
+
+        let output = renderer.render_paginated_index(&paginator, &config).expect("Failed to render paginated index");
+        assert!(output.contains("Page 1 of 2: P1"));
+    }
 
     #[test]
     fn test_render_taxonomy() {
