@@ -9,7 +9,10 @@ pub struct Renderer {
 
 impl Renderer {
     pub fn new<P: AsRef<Path>>(theme_dir: P) -> Result<Self> {
-        let mut tera = Tera::new(theme_dir.as_ref().join("**/*.html").to_str().unwrap())?;
+        let theme_dir = theme_dir.as_ref();
+        let glob = theme_dir.join("**/*.html");
+        let glob_str = glob.to_str().ok_or_else(|| anyhow::anyhow!("Invalid theme directory path"))?;
+        let mut tera = Tera::new(glob_str)?;
         tera.autoescape_on(vec![]); 
         Ok(Self { tera })
     }
@@ -84,6 +87,7 @@ mod tests {
             base_url: "url".to_string(),
             description: None,
             posts_per_page: None,
+            theme: None,
         };
 
         let output = renderer.render_paginated_index(&paginator, &config).expect("Failed to render paginated index");
@@ -119,6 +123,7 @@ mod tests {
             base_url: "https://example.com".to_string(),
             description: None,
             posts_per_page: None,
+            theme: None,
         };
 
         let output = renderer.render_taxonomy("rust", &[&post], &config).expect("Failed to render taxonomy");
@@ -133,16 +138,14 @@ mod tests {
         let theme_dir = temp_dir.path().join("templates");
         fs::create_dir(&theme_dir).expect("Failed to create templates dir");
 
-        let post_template = r###"#
-        <!DOCTYPE html>
+        let post_template = r#"<!DOCTYPE html>
         <html>
         <head><title>{{ post.meta.title }} - {{ config.title }}</title></head>
         <body>
             <h1>{{ post.meta.title }}</h1>
             <div class="content">{{ post.content }}</div>
         </body>
-        </html>
-        "###;
+        </html>"#;
         fs::write(theme_dir.join("post.html"), post_template).expect("Failed to write template");
 
         let renderer = Renderer::new(&theme_dir).expect("Failed to create renderer");
@@ -165,6 +168,7 @@ mod tests {
             base_url: "https://example.com".to_string(),
             description: None,
             posts_per_page: None,
+            theme: None,
         };
 
         let output = renderer.render_post(&post, &config).expect("Failed to render post");

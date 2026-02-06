@@ -19,7 +19,8 @@ pub fn build_site<P: AsRef<Path>>(
 
     let config = load_config(project_dir.join("config.toml"))?;
     
-    let theme_dir = project_dir.join("themes").join("default"); 
+    let theme_name = config.theme.as_deref().unwrap_or("default");
+    let theme_dir = project_dir.join("themes").join(theme_name); 
     let renderer = Renderer::new(theme_dir)?;
 
     let mut posts = load_posts(project_dir.join("content"))?;
@@ -101,6 +102,8 @@ pub fn init_project<P: AsRef<Path>>(path: P) -> Result<()> {
     let config_toml = r#"title = "My New Blog"
 base_url = "http://localhost:3000"
 description = "A blog generated with Rust"
+posts_per_page = 10
+theme = "default"
 "#;
     fs::write(path.join("config.toml"), config_toml)?;
 
@@ -200,6 +203,7 @@ mod tests {
             base_url = "https://example.com"
             description = "A test blog"
             posts_per_page = 1
+            theme = "default"
         "#;
         fs::write(project_dir.join("config.toml"), config_content).unwrap();
 
@@ -275,6 +279,7 @@ slug: post-2
         let config_content = r#"
             title = "Test"
             base_url = "https://example.com"
+            theme = "default"
         "#;
         fs::write(project_dir.join("config.toml"), config_content).unwrap();
 

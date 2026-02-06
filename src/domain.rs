@@ -23,4 +23,5 @@ pub struct Config {
     pub base_url: String,
     pub description: Option<String>,
     pub posts_per_page: Option<usize>,
+    pub theme: Option<String>,
 }
