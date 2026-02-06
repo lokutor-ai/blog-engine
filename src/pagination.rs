@@ -9,7 +9,11 @@ pub struct Paginator<T> {
 
 pub fn paginate<T: Clone>(items: &[T], per_page: usize) -> Vec<Paginator<T>> {
     if items.is_empty() {
-        return vec![];
+        return vec![Paginator {
+            current_page: 1,
+            total_pages: 1,
+            items: vec![],
+        }];
     }
     
     let total_pages = (items.len() as f64 / per_page as f64).ceil() as usize;

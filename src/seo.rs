@@ -47,6 +47,28 @@ pub fn generate_rss(posts: &[Post], config: &Config) -> Result<String> {
     Ok(rss)
 }
 
+use serde::Serialize;
+
+#[derive(Serialize)]
+struct SearchItem {
+    title: String,
+    slug: String,
+    content: String,
+}
+
+pub fn generate_search_index(posts: &[Post]) -> Result<String> {
+    let search_items: Vec<SearchItem> = posts
+        .iter()
+        .map(|p| SearchItem {
+            title: p.meta.title.clone(),
+            slug: p.meta.slug.clone(),
+            content: p.content.clone(),
+        })
+        .collect();
+
+    Ok(serde_json::to_string(&search_items)?)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -110,7 +132,30 @@ mod tests {
 
         assert!(rss.contains("<title>Test Blog</title>"));
         assert!(rss.contains("<link>https://example.com</link>"));
-        assert!(rss.contains("<title>Post 1</title>"));
-        assert!(rss.contains("https://example.com/posts/post-1/"));
-    }
-}
+                assert!(rss.contains("<title>Post 1</title>"));
+                assert!(rss.contains("https://example.com/posts/post-1/"));
+            }
+        
+            #[test]
+            fn test_generate_search_index() {
+                let posts = vec![
+                    Post {
+                        meta: PostMeta {
+                            title: "Searchable Post".to_string(),
+                            date: "2023-01-01".to_string(),
+                            slug: "searchable-post".to_string(),
+                            tags: Some(vec!["rust".to_string()]),
+                            categories: None,
+                            draft: None,
+                            image: None,
+                        },
+                        content: "This is searchable content".to_string(),
+                    },
+                ];
+        
+                let index_json = generate_search_index(&posts).expect("Failed to generate search index");
+                assert!(index_json.contains("Searchable Post"));
+                assert!(index_json.contains("searchable-post"));
+            }
+        }
+        

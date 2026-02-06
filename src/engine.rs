@@ -5,6 +5,7 @@ use anyhow::Result;
 use std::fs;
 use std::path::Path;
 use walkdir::WalkDir;
+use rayon::prelude::*;
 
 pub fn build_site<P: AsRef<Path>>(
     project_dir: P,
@@ -32,7 +33,6 @@ pub fn build_site<P: AsRef<Path>>(
     }
     fs::create_dir_all(output_dir)?;
 
-    let mut posts = posts;
     posts.sort_by(|a, b| b.meta.date.cmp(&a.meta.date));
 
     let per_page = config.posts_per_page.unwrap_or(10);
@@ -71,12 +71,14 @@ pub fn build_site<P: AsRef<Path>>(
     let rss_xml = crate::seo::generate_rss(&posts, &config)?;
     fs::write(output_dir.join("rss.xml"), rss_xml)?;
 
+    let search_json = crate::seo::generate_search_index(&posts)?;
+    fs::write(output_dir.join("search.json"), search_json)?;
+
     let static_dir = project_dir.join("static");
     if static_dir.exists() {
         copy_recursive(&static_dir, output_dir)?;
     }
 
-    use rayon::prelude::*;
     posts.par_iter().try_for_each(|post| -> Result<()> {
         let post_html = renderer.render_post(post, &config)?;
         let post_slug = &post.meta.slug;
@@ -232,18 +234,72 @@ slug: post-2
 
         build_site(&project_dir, &output_dir, false).expect("Failed to build site");
 
+        assert!(output_dir.join("index.html").exists());
+        assert!(output_dir.join("page/2/index.html").exists());
+        assert!(output_dir.join("posts/post-1/index.html").exists()); 
+        assert!(output_dir.join("posts/post-2/index.html").exists());
         assert!(output_dir.join("sitemap.xml").exists());
         assert!(output_dir.join("rss.xml").exists());
+        assert!(output_dir.join("search.json").exists());
         
         let css_content = fs::read_to_string(output_dir.join("css/style.css")).unwrap();
         assert_eq!(css_content, "body { color: red; }");
         
         let index_html = fs::read_to_string(output_dir.join("index.html")).unwrap();
         assert!(index_html.contains("Index: Test Blog"));
+        assert!(index_html.contains("Page 1"));
         assert!(index_html.contains("Post 2"));
+
+        let page2_html = fs::read_to_string(output_dir.join("page/2/index.html")).unwrap();
+        assert!(page2_html.contains("Page 2"));
+        assert!(page2_html.contains("Post 1"));
+
+        let search_json = fs::read_to_string(output_dir.join("search.json")).unwrap();
+        assert!(search_json.contains("Post 1"));
+        assert!(search_json.contains("Post 2"));
 
         let post_html = fs::read_to_string(output_dir.join("posts/post-1/index.html")).unwrap();
         assert!(post_html.contains("<h1>Post 1</h1>"));
         assert!(post_html.contains("<h1>P1</h1>"));
+    }
+
+    #[test]
+    fn test_drafts_filtering() {
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+        let project_dir = temp_dir.path().join("myblog");
+        let output_dir = temp_dir.path().join("public");
+
+        fs::create_dir_all(&project_dir.join("content/posts")).unwrap();
+        fs::create_dir_all(&project_dir.join("themes/default")).unwrap();
+        
+        let config_content = r#"
+            title = "Test"
+            base_url = "https://example.com"
+        "#;
+        fs::write(project_dir.join("config.toml"), config_content).unwrap();
+
+        let post_content = r#"---
+title: Draft Post
+date: 2023-01-01
+slug: draft-post
+draft: true
+---
+# Draft
+"#;
+        fs::write(project_dir.join("content/posts/draft.md"), post_content).unwrap();
+
+        let index_template = "{% for post in paginator.items %}{{ post.meta.title }}{% endfor %}";
+        fs::write(project_dir.join("themes/default/index.html"), index_template).unwrap();
+        fs::write(project_dir.join("themes/default/post.html"), "post").unwrap();
+
+        build_site(&project_dir, &output_dir, false).unwrap();
+        let index_html = fs::read_to_string(output_dir.join("index.html")).unwrap();
+        assert!(!index_html.contains("Draft Post"));
+        assert!(!output_dir.join("posts/draft-post/index.html").exists());
+
+        build_site(&project_dir, &output_dir, true).unwrap();
+        let index_html = fs::read_to_string(output_dir.join("index.html")).unwrap();
+        assert!(index_html.contains("Draft Post"));
+        assert!(output_dir.join("posts/draft-post/index.html").exists());
     }
 }
